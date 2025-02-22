@@ -1,20 +1,26 @@
-/**
- * ! MongoDB Telegram 相关的数据类型定义  示例代码
- */
+import { Context, NarrowedContext } from 'telegraf';
+import type { Update, Message, User } from '@telegraf/types';
 
-export interface TelegramMessage {
-  id: number;
-  text: string;
-  // 其他字段...
+// 扩展的文本消息类型
+export interface ExtendedTextMessage extends Omit<Message.TextMessage, 'reply_to_message'> {
+  reply_to_message?: Message.TextMessage;
+  new_chat_members?: User[];
 }
 
-export interface TelegramUser {
-  id: number;
-  username: string;
-  // 其他字段...
+export interface CustomContext extends Context {
+  userData?: any; // 可扩展自定义数据
+  startPayload?: string; // 添加 startPayload 属性
 }
 
-export interface ExtractedItem {
-  keyword: string;
-  number: number;
+export interface PaginationConfig {
+  pageSize?: number;
+  maxPageButtons?: number;
+}
+
+export interface RankUser {
+  uid: number;
+  username?: string;
+  firstName: string;
+  lastName?: string;
+  [key: string]: any;
 }
