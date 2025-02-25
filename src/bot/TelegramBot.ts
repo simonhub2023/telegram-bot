@@ -5,7 +5,9 @@ import { CustomContext } from '../models/TelegramTypes';
 import LotteryScheduler from '../scheduler/LotteryScheduler';
 import TwitterScheduler from '../scheduler/TwitterScheduler';
 import { TwitterApi } from 'twitter-api-v2';
-import { OpenAI } from 'openai'; //Adjust the import path as necessary
+import { OpenAI } from 'openai'; 
+import { SyncCommand } from '../commands/SyncCommand';
+import { ImportScoreCommand } from '../commands/ImportScoreCommand'; 
 
 export class TelegramBot {
   private bot: Telegraf<CustomContext>;
@@ -65,8 +67,10 @@ export class TelegramBot {
       { command: 's_invite_ranking', description: '邀请积分排名' },
       { command: 's_invite_link', description: '生成邀请链接' },
       { command: 's_create_lottery', description: '创建抽奖' },
-      { command: 's_join_twitter_campaign', description: '参与冲推' }, // 新增命令
+      { command: 's_join_twitter_campaign', description: '参与冲推' },
       { command: 's_helpme', description: '获取帮助' },
+      { command: 'sync', description: '同步用户数据' },
+      { command: 'import_score', description: '导入用户积分' },
     ]);
   }
 
@@ -77,7 +81,15 @@ export class TelegramBot {
       this.controller.showMainMenu(ctx);
     });
 
+    // 监听同步命令
+    this.bot.command('sync', async (ctx) => {
+      await SyncCommand.handleSyncCommand(ctx);
+    });
 
+    // 监听导入积分命令
+    this.bot.command('import_score', async (ctx) => {
+      await ImportScoreCommand.handleImportScoreCommand(ctx);
+    });
 
     // 处理按钮点击事件
     this.bot.on('callback_query', async (ctx) => {
@@ -372,6 +384,29 @@ export class TelegramBot {
       await this.controller.showCurrentLottery(ctx);
     });
 
+    // 监听文档消息
+    this.bot.on('document', async (ctx) => {
+      console.log('Received document message');
+      console.log('Chat ID:', ctx.chat?.id);
+      console.log('Document:', ctx.message?.document);
+      // 检查是否是SyncCommand等待的文件
+      if (SyncCommand.isWaitingForFile.get(ctx.chat.id)) {
+        await SyncCommand.handleUserIdFile(ctx, this.bot);
+        return;
+      }
+      
+      // 检查是否是ImportScoreCommand等待的文件
+      if (ImportScoreCommand.isWaitingForFile.get(ctx.chat.id)) {
+        await ImportScoreCommand.handleScoreFile(ctx);
+        return;
+      }
+    });
+
+    // 监听新成员加入
+    this.bot.on('new_chat_members', async (ctx) => {
+      await this.controller.handleNewMember(ctx);
+    });
+
     // 通用消息处理
     this.bot.on('message', async (ctx) => {
 
@@ -401,10 +436,7 @@ export class TelegramBot {
     });
 
 
-    // 监听新成员加入
-    this.bot.on('new_chat_members', async (ctx) => {
-      await this.controller.handleNewMember(ctx);
-    });
+    
   }
 
   public start() {

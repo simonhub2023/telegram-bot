@@ -32,8 +32,8 @@ class LotteryScheduler {
     schedule.scheduleJob({ tz: 'Asia/Shanghai', rule: '30 23 * * *' }, async () => {
       const now = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
       console.log(`Drawing lottery winners at ${now}`);
-      const defaultLotteryNum = 2; // 2 winners
-      const defaultLotteryRate = 0.5; // 50% of participants will win
+      const defaultLotteryNum = 5; // 5 winners
+      const defaultLotteryRate = 0.35; // 35% of participants will win
       await this.drawLottery(defaultLotteryNum, defaultLotteryRate);
     });
   }
@@ -48,8 +48,8 @@ class LotteryScheduler {
       // 如果抽奖活动已经创建但未开奖，则进行开奖
       if (!lottery.isDrawn) {
         console.log(`Found pending lottery draw for ID: ${LotteryScheduler.currentLotteryId}. Drawing now...`);
-        const defaultLotteryNum = 2; // 2 winners
-        const defaultLotteryRate = 0.5; // 50% of participants will win
+        const defaultLotteryNum = 5; // 5 winners
+      const defaultLotteryRate = 0.35; // 35% of participants will win
         await this.drawLottery(defaultLotteryNum, defaultLotteryRate);
       }
     }

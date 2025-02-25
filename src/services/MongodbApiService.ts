@@ -298,4 +298,43 @@ export class MongodbService {
     }
   }
 
+  static async updateUserPoints(uid: number, points: number): Promise<User | null> {
+    try {
+      // 先获取当前用户信息
+      const user = await UserModel.findOne({ uid });
+      
+      // 如果用户不存在，创建新用户
+      if (!user) {
+        // return await UserModel.create({
+        //   uid,
+        //   points,
+        //   messagesSent: points, // 新用户的 messagesSent 设置为 points
+        //   firstName: 'Unknown' // 必需字段，设置默认值
+        // });
+        console.log("用户未找到:", uid);
+        return null
+      }
+
+      // 如果当前的 messagesSent 小于新的 points，更新 messagesSent
+      const updateData: { points: number; messagesSent?: number } = { points };
+      if (user.messagesSent < points) {
+        updateData.messagesSent = points;
+        updateData.points = points;
+      }
+      
+      console.log("updateData messagesSent:", updateData.messagesSent, "points:", updateData.points);
+      // 更新用户数据
+      const updatedUser = await UserModel.findOneAndUpdate(
+        { uid },
+        { $set: updateData },
+        { new: true }
+      );
+      return updatedUser;
+      
+    } catch (error) {
+      console.error("Error updating user points:", error);
+      throw error;
+    }
+  }
+
 }
